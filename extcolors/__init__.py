@@ -7,6 +7,8 @@ import os
 import time
 from collections import defaultdict
 from PIL import Image, ImageDraw
+import requests
+from io import BytesIO
 
 
 DEFAULT_TOLERANCE = 32
@@ -39,7 +41,13 @@ def to_int(tuple):
 	return int(tuple[0]), int(tuple[1]), int(tuple[2])
 
 def load(path):
-	img = Image.open(path)
+
+    if path[:4].lower()=="http" :
+        response = requests.get(path)
+        img = Image.open(BytesIO(response.content))
+    else:   
+        img = Image.open(path)        
+	
 	img = img.convert("RGB")
 	return list(img.getdata())
 
