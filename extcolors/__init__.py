@@ -61,10 +61,7 @@ def get_cropped_img(img, pix_size):
     top = int(np.ceil(height/2 - pix_size))
     bottom = top + 2 * pix_size
     # Get cropped image
-    img = img.crop((left, top, right, bottom))
-    # Show image
-    img.show()
-    return img
+    return img.crop(left, top, right, bottom)
 
 def count_colors(pixels):
     counter = defaultdict(int)
