@@ -9,7 +9,7 @@ from collections import defaultdict
 from PIL import Image, ImageDraw
 import requests
 from io import BytesIO
-
+import numpy as np
 
 DEFAULT_TOLERANCE = 32
 
@@ -44,13 +44,24 @@ def to_int(tuple):
 
 def load(path):
     if path[:4].lower() == "http":
-        response = requests.get(path)
-        img = Image.open(BytesIO(response.content))
+        response=requests.get(path)
+        img=Image.open(BytesIO(response.content))
     else:
-        img = Image.open(path)
-	img = img.convert("RGB")
+        img=Image.open(path)
+    img=img.convert("RGB")
     return list(img.getdata())
 
+def get_cropped_img(img, pix_size):   
+    # Take width and height
+    width = img.size[0]
+    height = img.size[1]
+    # Get borders
+    left = int(np.ceil(width/2 - pix_size))
+    right = left + 2 * pix_size
+    top = int(np.ceil(height/2 - pix_size))
+    bottom = top + 2 * pix_size
+    # Get cropped image
+    return img.crop(left, top, right, bottom)
 
 def count_colors(pixels):
     counter = defaultdict(int)
