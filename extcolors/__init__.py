@@ -15,7 +15,30 @@ DEFAULT_TOLERANCE = 32
 
 
 def extract(path, tolerance=DEFAULT_TOLERANCE, limit=None):
-    pixels = load(path)
+    pixels = list(load(path).getdata())
+    rgb_colors = count_colors(pixels)
+
+    if tolerance > 0:
+        lab_colors = dict()
+        for color, count in rgb_colors.items():
+            lab_colors[colorutil.rgb_lab(color)] = count
+
+        lab_colors = compress(lab_colors, tolerance)
+
+        rgb_colors = dict()
+        for color, count in lab_colors.items():
+            rgb_colors[colorutil.lab_rgb(color)] = count
+
+    rgb_colors = sorted(rgb_colors.items(), key=lambda x: x[1], reverse=True)
+    rgb_colors = [(to_int(c[0]), c[1]) for c in rgb_colors]
+
+    if limit:
+        rgb_colors = rgb_colors[:min(int(limit), len(rgb_colors))]
+
+    return rgb_colors, len(pixels)
+
+def extract_crop(path, pix_size, tolerance=DEFAULT_TOLERANCE, limit=None):
+    pixels = get_cropped_img(path, pix_size)
     rgb_colors = count_colors(pixels)
 
     if tolerance > 0:
@@ -49,19 +72,21 @@ def load(path):
     else:
         img=Image.open(path)
     img=img.convert("RGB")
-    return list(img.getdata())
+    return img
 
-def get_cropped_img(img, pix_size):   
+def get_cropped_img(path, pix_size):
+    img = load(path)
     # Take width and height
     width = img.size[0]
     height = img.size[1]
     # Get borders
     left = int(np.ceil(width/2 - pix_size))
-    right = left + 2 * pix_size
+    right = int(left + 2 * pix_size)
     top = int(np.ceil(height/2 - pix_size))
-    bottom = top + 2 * pix_size
+    bottom = int(top + 2 * pix_size)
     # Get cropped image
-    return img.crop(left, top, right, bottom)
+    img = img.crop((left, top, right, bottom))
+    return list(img.getdata())
 
 def count_colors(pixels):
     counter = defaultdict(int)
